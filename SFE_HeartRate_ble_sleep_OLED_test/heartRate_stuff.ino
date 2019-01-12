@@ -16,11 +16,20 @@ bool captureHR(uint32_t startTime) {
   // Run the sample through a simple EMA highpass filter https://www.norwegiancreations.com/2016/03/arduino-tutorial-simple-high-pass-band-pass-and-band-stop-filtering/
   sumEMA_S = (EMA_a*sumSample) + ((1-EMA_a)*sumEMA_S);  //run the EMA
   sumHighpass = sumSample - sumEMA_S;                   //calculate the high-pass signal
+#ifdef DEBUG
+    unsigned long activeTime = micros();
+#endif
 
   while (SimbleeBLE.radioActive) {
     ;
   }
-
+  
+#ifdef DEBUG
+    Serial.print("radioActive uS ");          // use to test Simblee radio active time in serial monitor
+    Serial.println(micros() - activeTime);
+int plottable = constrain(sumHighpass,-500,500);
+    Serial.println(plottable);              // use to test pulse waveform in serial plotter
+#endif
   if (checkForPulse(sumHighpass) == true)
   {
     unsigned  long thisMillis = millis();
@@ -43,10 +52,10 @@ bool captureHR(uint32_t startTime) {
         beatCounter++;
         if(beatCounter > 255){ beatCounter = 0; }
     }
-#ifdef DEBUG
-    Serial.print("Instantaneous BPM: ");
+//#ifdef DEBUG
+    Serial.print("Instantaneous BPM: ");  // use to test instantaneous bpm in serial monitor
     Serial.println(beat);
-#endif
+//#endif
   }
   digitalWrite(RED, HIGH);
 
@@ -64,7 +73,7 @@ if(!rising){
     }else{
       amp = getAmplitude();
       rising = true;
-      if(amp>75 && amp<3000){
+      if(amp>90 && amp<3000){
         beatDetected = true;  // detect beat on lowest point
       }
     }

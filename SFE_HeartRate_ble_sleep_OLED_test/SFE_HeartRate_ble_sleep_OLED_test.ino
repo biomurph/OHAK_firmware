@@ -31,7 +31,7 @@
 
 */
 //#define DEBUG 1
-#define OLED 1
+//#define OLED 1
 #include "OHAK_Definitions.h"
 
 #include <Wire.h>
@@ -64,8 +64,6 @@ String bpm = "";
 time_t localTime, utc;
 int minutesOffset = 0;
 signed char timeZoneOffset = 0;
-//TimeChangeRule localCR = {"TCR", First, Sun, Nov, 2, minutesOffset};   
-//Timezone localZone(localCR, localCR);
 
 MAX30105 particleSensor;
 
@@ -120,12 +118,12 @@ boolean rising = false;
   int pulseWidth = 118; //Options: 69, 118, 215, 411  *shorteded from 411
   int adcRange = 2048; //Options: 2048, 4096, 8192, 16384 *smaller range = larger sample number
 
-
+  
 // tap stuff
 bool tapFlag = false;
 
 
-uint8_t mode = 10;
+uint8_t mode = 4; // 10;
 bool bConnected = false;
 
 // interval between advertisement transmissions ms (range is 20ms to 10.24s) - default 20ms
@@ -174,8 +172,6 @@ uint8_t advdata[14] =
 
 void setup()
 {
-  //analogSelection(VDD1_3_PS);
-  
   String stringy =  String(getDeviceIdLow(), HEX);
   advdata[10] = (uint8_t)stringy.charAt(0);
   advdata[11] = (uint8_t)stringy.charAt(1);
@@ -210,10 +206,10 @@ void setup()
   Simblee_pinWake(BMI_INT1, LOW); // use this to wake the MCU if its sleeping
 
 
-#ifdef DEBUG
+//#ifdef DEBUG
   Serial.begin(9600);
   Serial.println("Initializing...");
-#endif
+//#endif
 
 const unsigned long DEFAULT_TIME = 1357041600; // Jan 1 2013
 setTime(DEFAULT_TIME);
@@ -313,7 +309,8 @@ void loop()
       Serial.println("Enter mode 0");
 #endif
       lastTime = millis();
-      updateTime();
+      utc = now();  // This works to keep time incrementing that we send to the phone
+      localTime = utc + (minutesOffset/60); // This does not work to keep track of time we pring on screen??
       samples[currentSample].epoch = utc;  // Send utc time to the phone. Phone will manage timezone, etc.
       samples[currentSample].steps = BMI160.getStepCount();
       memset(arrayBeats, 0, sizeof(arrayBeats));
@@ -396,6 +393,11 @@ void loop()
 #endif
       transferSamples();
       break;
+      
+    case 4:
+      graphBeats(false);
+      break;  
+      
     case 10:
 #ifdef DEBUG
       Serial.println("Enter mode 10");
@@ -422,6 +424,7 @@ void loop()
   // Serial.print(" No finger?");
 
   //Serial.println();
+  checkSerial();
 }
 
 
@@ -469,15 +472,11 @@ String digitalClockDisplay() {
 }
 uint8_t getBatteryVoltage() {
   int counts = analogRead(V_SENSE);
+  // Serial.print(counts); Serial.print("\t");
   volts = float(counts) * (3.3 / 1023.0);
-  volts *= 2.0;
+  // Serial.print(volts,3); Serial.print("\t");
+  volts *= 2;
+  // Serial.println(volts,3);
+
   return volts / BATT_VOLT_CONST;
 }
-
-void updateTime(){
-    TimeChangeRule localCR = {"TCR", First, Sun, Nov, 2, minutesOffset};   
-    Timezone localZone(localCR, localCR);
-    utc = now();    //current time from the Time Library
-    localTime = localZone.toLocal(utc);
-}
-

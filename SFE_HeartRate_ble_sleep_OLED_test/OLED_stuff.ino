@@ -1,9 +1,9 @@
-//#ifdef OLED //?
+#ifdef OLED //?
 
 void splashOLED(){
     oled.begin();    // Initialize the OLED
-    oled.flipHorizontal(true);
-    oled.flipVertical(true);
+//    oled.flipHorizontal(true);
+//    oled.flipVertical(true);
     oled.clear(ALL); // Clear the display's internal memory
     oled.clear(PAGE); // Clear the buffer.
 
@@ -24,8 +24,8 @@ void splashOLED(){
 void printOLED(String inString, boolean printTime) {
 
     oled.begin();    // Initialize the OLED
-    oled.flipHorizontal(true);
-    oled.flipVertical(true);
+  //  oled.flipHorizontal(true);
+  //  oled.flipVertical(true);
     oled.clear(ALL); // Clear the display's internal memory
     oled.clear(PAGE); // Clear the buffer.
 
@@ -78,4 +78,4 @@ int format12(int h){
     return h ;
 }
 
-//#endif
+#endif

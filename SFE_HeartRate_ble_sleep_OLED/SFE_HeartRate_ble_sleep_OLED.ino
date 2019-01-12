@@ -64,7 +64,7 @@ String bpm = "";
 time_t localTime, utc;
 int minutesOffset = 0;
 signed char timeZoneOffset = 0;
-//TimeChangeRule localCR = {"TCR", First, Sun, Nov, 2, minutesOffset};   
+//TimeChangeRule localCR = {"TCR", First, Sun, Nov, 2, minutesOffset};
 //Timezone localZone(localCR, localCR);
 
 MAX30105 particleSensor;
@@ -175,7 +175,7 @@ uint8_t advdata[14] =
 void setup()
 {
   //analogSelection(VDD1_3_PS);
-  
+
   String stringy =  String(getDeviceIdLow(), HEX);
   advdata[10] = (uint8_t)stringy.charAt(0);
   advdata[11] = (uint8_t)stringy.charAt(1);
@@ -225,6 +225,14 @@ setTime(DEFAULT_TIME);
     while (1);
   }
 
+  //Setup to sense a nice looking saw tooth on the plotter
+  //  *Joel's notes  -> NEEDS MOVE TO DEFINES
+  byte ledBrightness = 0x1F; //Options: 0=Off to 255=50mA *not a bad value
+  byte sampleAverage = 8; //Options: 1, 2, 4, 8, 16, 32 *have not messed with this
+  byte ledMode = 3; //Options: 1 = Red only, 2 = Red + IR, 3 = Red + IR + Green *not a bad value?
+  byte sampleRate = 200; //Options: 50, 100, 200, 400, 800, 1000, 1600, 3200  *higher = noisier but better resolution
+  int pulseWidth = 118; //Options: 69, 118, 215, 411  *shorteded from 411
+  int adcRange = 2048; //Options: 2048, 4096, 8192, 16384 *smaller range = larger sample number
 
   firstBeat = true;
   beat = lastBeat = beatCounter = 0;
@@ -475,9 +483,8 @@ uint8_t getBatteryVoltage() {
 }
 
 void updateTime(){
-    TimeChangeRule localCR = {"TCR", First, Sun, Nov, 2, minutesOffset};   
+    TimeChangeRule localCR = {"TCR", First, Sun, Nov, 2, minutesOffset};
     Timezone localZone(localCR, localCR);
     utc = now();    //current time from the Time Library
     localTime = localZone.toLocal(utc);
 }
-

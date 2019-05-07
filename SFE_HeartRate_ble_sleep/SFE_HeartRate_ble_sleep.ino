@@ -46,7 +46,7 @@ Lazarus Lazarus;
 
 #include <ota_bootloader.h>
 #include <SimbleeBLE.h>
-
+#define DEBUG = 1
 
 String VERSION = "0.1.0";
 
@@ -63,26 +63,26 @@ QuickStats stats; //initialize an instance of stats class
 
 long lastTime;
 long awakeTime;
-//#ifndef DEBUG
-//long interval = 15000; //30000 this is how long we capture hr data
-//int sleepTime = 60; //600 is production
-//#else
+#ifndef DEBUG
+long interval = 15000; //30000 this is how long we capture hr data
+int sleepTime = 60; //600 is production
+#else
 long interval = 30000; //30000 this is how long we capture hr data
 int sleepTime = 600; //600 is production
-//#endif
+#endif
 
-float volts = 8;
+float volts = 0.0;
 
-//const byte RATE_SIZE = 4; //Increase this for more averaging. 4 is good.
-//byte rates[RATE_SIZE]; //Array of heart rates
-//byte rateSpot = 0;
+const byte RATE_SIZE = 4; //Increase this for more averaging. 4 is good.
+byte rates[RATE_SIZE]; //Array of heart rates
+byte rateSpot = 0;
 long lastBeatTime = 0; //Time at which the last beat occurred
 bool firstBeat = true;
 float beatsPerMinute;
-//int beatAvg;
-//uint8_t lastBeatAvg;
-//uint8_t aveBeatsAve[255];
-//uint8_t aveCounter = 0;
+int beatAvg;
+uint8_t lastBeatAvg;
+uint8_t aveBeatsAve[255];
+uint8_t aveCounter = 0;
 int beat;
 uint8_t lastBeat;
 uint8_t arrayBeats[256];
@@ -156,12 +156,9 @@ void setup()
   // change the advertisement interval
   SimbleeBLE.advertisementInterval = bleInterval;
   SimbleeBLE.begin();
-  pinMode(RED, OUTPUT);
-  digitalWrite(RED, HIGH);
-  pinMode(BLU, OUTPUT);
-  digitalWrite(BLU, HIGH);
-  pinMode(GRN, OUTPUT);
-  digitalWrite(GRN, HIGH);
+  pinMode(RED, OUTPUT); digitalWrite(RED, HIGH);
+  pinMode(BLU, OUTPUT); digitalWrite(BLU, HIGH);
+  pinMode(GRN, OUTPUT); digitalWrite(GRN, HIGH);
 
   //Setup all the devices
   BMI160.begin(0, -1); // use BMI_INT1 for internal interrupt, but we're handling the interrupt so using -1
@@ -174,10 +171,7 @@ void setup()
   Simblee_pinWake(BMI_INT1, LOW); // use this to wake the MCU if its sleeping
 
 
-#ifdef DEBUG
-  Serial.begin(9600);
-  Serial.println("Initializing...");
-#endif
+
 
 const unsigned long DEFAULT_TIME = 1357041600; // Jan 1 2013
 setTime(DEFAULT_TIME);
@@ -195,27 +189,26 @@ setTime(DEFAULT_TIME);
 
   //Blink the startup pattern
   digitalWrite(RED, LOW);
-  delay(400);
-  digitalWrite(GRN, LOW);
-  digitalWrite(RED, HIGH);
-  delay(400);
-  digitalWrite(GRN, HIGH);
-  digitalWrite(BLU, LOW);
-  delay(400);
-  digitalWrite(BLU, HIGH);
+  delay(400);digitalWrite(GRN, LOW);digitalWrite(RED, HIGH);
+  delay(400);digitalWrite(GRN, HIGH);digitalWrite(BLU, LOW);
+  delay(400);digitalWrite(BLU, HIGH);
 #ifdef DEBUG
-  digitalWrite(BLU, LOW);
-  delay(400);
-  digitalWrite(BLU, HIGH);
-  delay(400);
-  digitalWrite(BLU, LOW);
-  delay(400);
-  digitalWrite(BLU, HIGH);
+	delay(400);digitalWrite(BLU, LOW);
+  delay(400);digitalWrite(BLU, HIGH);
+  delay(400);digitalWrite(BLU, LOW);
+  delay(400);digitalWrite(BLU, HIGH);
 #endif
 
+#ifdef DEBUG
+  Serial.begin(9600);
+  Serial.println("OpenHAK v1.3.1");
+//	Serial.print("BMI DEVICE ID: "); Serial.println(dev_id, HEX);
+	Serial.print("BMI CHIP ID: "); Serial.println(getBMI_chipID());    // should print 0xD1)
+	getMAXdeviceInfo();
+#endif
 
   lastTime = millis();
-  delay(5000);
+  delay(1000);
 }
 void bmi160_intr(void)
 {

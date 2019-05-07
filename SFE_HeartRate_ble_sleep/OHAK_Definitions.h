@@ -4,15 +4,15 @@
 */
 
 //  SIMBLEE PINS
-#define RED 28        // red part of LED
-#define GRN 29        // green part of LED
-#define BLU 25        // blue part of LED
+#define RED 24        // red part of LED
+#define GRN 23        // green part of LED
+#define BLU 20        // blue part of LED
 #define MAX_INT 30    // MAX30102 interrupts on this Simblee pin
 #define SCL_PIN 13    // I2C clock pin
 #define SDA_PIN 10    // I2C data pin
-#define BMI_INT1 20
-#define BMI_INT2 24
-#define PIN_4 4       // GPIO and Analog pin
+#define BMI_INT1 29
+#define BMI_INT2 28
+#define PIN_25 25     // GPIO pin
 #define PIN_3 3       // GPIO and Analog pin
 #define PIN_2 2       // GPIO and Analog pin
 #define V_SENSE 5     // Measure Battery Level with this pin

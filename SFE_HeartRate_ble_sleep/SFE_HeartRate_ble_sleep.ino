@@ -29,8 +29,12 @@ Lazarus Lazarus;
 
 #include <ota_bootloader.h>
 #include <SimbleeBLE.h>
+<<<<<<< HEAD
 
  #define DEBUG 1
+=======
+#define DEBUG = 1
+>>>>>>> 1ab4e772798b11405157075de0df3a1772f992ac
 
 String VERSION = "0.1.0";
 
@@ -75,11 +79,15 @@ long interval = 30000; //30000 this is how long we capture hr data
 int sleepTime = 600; //600 is production
 #endif
 
-float volts = 8;
+float volts = 0.0;
 
 const byte RATE_SIZE = 4; //Increase this for more averaging. 4 is good.
 byte rates[RATE_SIZE]; //Array of heart rates
+<<<<<<< HEAD
 //byte rateSpot = 0;
+=======
+byte rateSpot = 0;
+>>>>>>> 1ab4e772798b11405157075de0df3a1772f992ac
 long lastBeatTime = 0; //Time at which the last beat occurred
 bool firstBeat = true;
 float beatsPerMinute;
@@ -180,6 +188,7 @@ void setup()
   Simblee_pinWake(BMI_INT1, LOW); // use this to wake the MCU if its sleeping
 
 
+<<<<<<< HEAD
 #ifdef DEBUG
   Serial.println("OpenHAK Test");
   getBMI_chipID();    // print BMI id [0xD1]
@@ -187,6 +196,9 @@ void setup()
   Serial.println("getting battery...");
   getBatteryVoltage();
 #endif
+=======
+
+>>>>>>> 1ab4e772798b11405157075de0df3a1772f992ac
 
 const unsigned long DEFAULT_TIME = 1357041600; // Jan 1 2013
 setTime(DEFAULT_TIME);
@@ -204,27 +216,26 @@ setTime(DEFAULT_TIME);
 
   //Blink the startup pattern
   digitalWrite(RED, LOW);
-  delay(400);
-  digitalWrite(GRN, LOW);
-  digitalWrite(RED, HIGH);
-  delay(400);
-  digitalWrite(GRN, HIGH);
-  digitalWrite(BLU, LOW);
-  delay(400);
-  digitalWrite(BLU, HIGH);
+  delay(400);digitalWrite(GRN, LOW);digitalWrite(RED, HIGH);
+  delay(400);digitalWrite(GRN, HIGH);digitalWrite(BLU, LOW);
+  delay(400);digitalWrite(BLU, HIGH);
 #ifdef DEBUG
-  digitalWrite(BLU, LOW);
-  delay(400);
-  digitalWrite(BLU, HIGH);
-  delay(400);
-  digitalWrite(BLU, LOW);
-  delay(400);
-  digitalWrite(BLU, HIGH);
+	delay(400);digitalWrite(BLU, LOW);
+  delay(400);digitalWrite(BLU, HIGH);
+  delay(400);digitalWrite(BLU, LOW);
+  delay(400);digitalWrite(BLU, HIGH);
 #endif
 
+#ifdef DEBUG
+  Serial.begin(9600);
+  Serial.println("OpenHAK v1.3.1");
+//	Serial.print("BMI DEVICE ID: "); Serial.println(dev_id, HEX);
+	Serial.print("BMI CHIP ID: "); Serial.println(getBMI_chipID());    // should print 0xD1)
+	getMAXdeviceInfo();
+#endif
 
   lastTime = millis();
-  delay(5000);
+  delay(1000);
 }
 void bmi160_intr(void)
 {

@@ -6,31 +6,14 @@
    Date: October 2nd, 2016
    https://github.com/sparkfun/MAX30105_Breakout
 
-   This is a demo to show the reading of heart rate or beats per minute (BPM) using
-   a Penpheral Beat Amplitude (PBA) algorithm.
 
-   It is best to attach the sensor to your finger using a rubber band or other tightening
-   device. Humans are generally bad at applying constant pressure to a thing. When you
-   press your finger against the sensor it varies enough to cause the blood in your
-   finger to flow differently which causes the sensor readings to go wonky.
-
-   Hardware Connections (Breakoutboard to Arduino):
-   -5V = 5V (3.3V is allowed)
-   -GND = GND
-   -SDA = A4 (or SDA)
-   -SCL = A5 (or SCL)
-   -INT = Not connected
-
-   The MAX30105 Breakout can handle 5V or 3.3V I2C logic. We recommend powering the board with 5V
-   but it will also run at 3.3V.
-
-
+   not sure if these current values are correct.
    0.38925 = mAh running
    0.475 = mAh sleeping
 
 
 */
-//#define DEBUG 1
+#define DEBUG 1
 #include "OHAK_Definitions.h"
 
 #include <Wire.h>
@@ -47,6 +30,7 @@ Lazarus Lazarus;
 #include <ota_bootloader.h>
 #include <SimbleeBLE.h>
 
+ #define DEBUG 1
 
 String VERSION = "0.1.0";
 
@@ -60,34 +44,54 @@ MAX30105 particleSensor;
 
 QuickStats stats; //initialize an instance of stats class
 
+volatile boolean MAX_interrupt = false;
+short interruptSetting;
+short interruptFlags;
+float Celcius;
+float Fahrenheit;
+char sampleCounter = 0;
+int REDvalue;
+int IRvalue;
+//char mode = SPO2_MODE;  // SPO2_MODE or HR_MODE
+char readPointer;
+char writePointer;
+char ovfCounter;
+int rAmp = 10;
+int irAmp = 10;
+
+
+//  TESTING
+unsigned int thisTestTime;
+unsigned int thatTestTime;
+char sampleRate;
 
 long lastTime;
 long awakeTime;
-//#ifndef DEBUG
-//long interval = 15000; //30000 this is how long we capture hr data
-//int sleepTime = 60; //600 is production
-//#else
+#ifndef DEBUG
+long interval = 15000; //30000 this is how long we capture hr data
+int sleepTime = 60; //600 is production
+#else
 long interval = 30000; //30000 this is how long we capture hr data
 int sleepTime = 600; //600 is production
-//#endif
+#endif
 
 float volts = 8;
 
-//const byte RATE_SIZE = 4; //Increase this for more averaging. 4 is good.
-//byte rates[RATE_SIZE]; //Array of heart rates
+const byte RATE_SIZE = 4; //Increase this for more averaging. 4 is good.
+byte rates[RATE_SIZE]; //Array of heart rates
 //byte rateSpot = 0;
 long lastBeatTime = 0; //Time at which the last beat occurred
 bool firstBeat = true;
 float beatsPerMinute;
-//int beatAvg;
-//uint8_t lastBeatAvg;
-//uint8_t aveBeatsAve[255];
-//uint8_t aveCounter = 0;
+int beatAvg;
+uint8_t lastBeatAvg;
+uint8_t aveBeatsAve[255];
+uint8_t aveCounter = 0;
 int beat;
 uint8_t lastBeat;
 uint8_t arrayBeats[256];
 uint8_t beatCounter;
-
+unsigned long dummyTimer;
 bool tapFlag = false;
 
 
@@ -95,7 +99,7 @@ uint8_t mode = 10;
 bool bConnected = false;
 
 // interval between advertisement transmissions ms (range is 20ms to 10.24s) - default 20ms
-int bleInterval = 675;  // 675 ms between advertisement transmissions longer time = better battery but slower scan/connect
+int bleInterval = 300;  // 675 ms between advertisement transmissions longer time = better battery but slower scan/connect
 
 /* DATA structures
    Sample data every 10 minutes
@@ -140,6 +144,11 @@ uint8_t advdata[14] =
 
 void setup()
 {
+  if(DEBUG){
+    Serial.begin(9600);
+    dummyTimer = millis();
+    Serial.println("starting...");
+  }
   String stringy =  String(getDeviceIdLow(), HEX);
   advdata[10] = (uint8_t)stringy.charAt(0);
   advdata[11] = (uint8_t)stringy.charAt(1);
@@ -156,12 +165,9 @@ void setup()
   // change the advertisement interval
   SimbleeBLE.advertisementInterval = bleInterval;
   SimbleeBLE.begin();
-  pinMode(RED, OUTPUT);
-  digitalWrite(RED, HIGH);
-  pinMode(BLU, OUTPUT);
-  digitalWrite(BLU, HIGH);
-  pinMode(GRN, OUTPUT);
-  digitalWrite(GRN, HIGH);
+  pinMode(RED, OUTPUT); digitalWrite(RED, HIGH);
+  pinMode(BLU, OUTPUT); digitalWrite(BLU, HIGH);
+  pinMode(GRN, OUTPUT); digitalWrite(GRN, HIGH);
 
   //Setup all the devices
   BMI160.begin(0, -1); // use BMI_INT1 for internal interrupt, but we're handling the interrupt so using -1
@@ -175,15 +181,18 @@ void setup()
 
 
 #ifdef DEBUG
-  Serial.begin(9600);
-  Serial.println("Initializing...");
+  Serial.println("OpenHAK Test");
+  getBMI_chipID();    // print BMI id [0xD1]
+  getMAXdeviceInfo(); // prints rev [0x00-0xFF] and device ID [0x15]
+  Serial.println("getting battery...");
+  getBatteryVoltage();
 #endif
 
 const unsigned long DEFAULT_TIME = 1357041600; // Jan 1 2013
 setTime(DEFAULT_TIME);
 
   // Initialize sensor
-  if (!particleSensor.begin(Wire, 400)) //Use default I2C port, 400kHz speed
+  if (!particleSensor.begin(Wire, 400, MAX_ADD)) //Use default I2C port, 400kHz speed
   {
     //Serial.println("MAX30105 was not found. Please check wiring/power. ");
     while (1);
@@ -411,12 +420,22 @@ String digitalClockDisplay() {
   return dataString;
 }
 uint8_t getBatteryVoltage() {
-  int counts = analogRead(V_SENSE);
-  // Serial.print(counts); Serial.print("\t");
-  volts = float(counts) * (3.3 / 1023.0);
-  // Serial.print(volts,3); Serial.print("\t");
-  volts *= 2;
-  // Serial.println(volts,3);
+    int thisCount, lastCount;
 
-  return volts / BATT_VOLT_CONST;
+    for(int i=0; i<100; i++){
+      lastCount = analogRead(V_SENSE);
+      delay(10);
+      thisCount = analogRead(V_SENSE);
+			if(DEBUG){
+	      Serial.print(i); Serial.print("\t"); Serial.print(lastCount); Serial.print("\t"); Serial.println(thisCount);
+			}
+      if(thisCount >= lastCount){ break; }
+      delay(10);
+    }
+    volts = float(thisCount) * (3.0 / 1023.0);
+    volts *= 2.0;
+    if(DEBUG){
+      Serial.print(thisCount); Serial.print("\t"); Serial.println(volts,3);
+    }
+    return volts / BATT_VOLT_CONST; // why do this??
 }

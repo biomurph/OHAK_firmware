@@ -46,7 +46,7 @@ Lazarus Lazarus;
 
 #include <ota_bootloader.h>
 #include <SimbleeBLE.h>
-#define DEBUG = 1
+//#define DEBUG = 1
 
 String VERSION = "0.1.0";
 
@@ -203,8 +203,8 @@ setTime(DEFAULT_TIME);
   Serial.begin(9600);
   Serial.println("OpenHAK v1.3.1");
 //	Serial.print("BMI DEVICE ID: "); Serial.println(dev_id, HEX);
-	Serial.print("BMI CHIP ID: "); Serial.println(getBMI_chipID());    // should print 0xD1)
-	getMAXdeviceInfo();
+//	Serial.print("BMI CHIP ID: "); Serial.println(getBMI_chipID());    // should print 0xD1)
+//	getMAXdeviceInfo();
 #endif
 
   lastTime = millis();
@@ -404,9 +404,17 @@ String digitalClockDisplay() {
   return dataString;
 }
 uint8_t getBatteryVoltage() {
-  int counts = analogRead(V_SENSE);
+  int lastCounts = analogRead(V_SENSE);
+  int counts;
+  for(int i=0; i<100; i++){
+    counts = analogRead(V_SENSE);
+    if(counts >= lastCounts){ break; }
+    delay(5);
+    lastCounts = analogRead(V_SENSE);
+    delay(5);
+  }
   // Serial.print(counts); Serial.print("\t");
-  volts = float(counts) * (3.3 / 1023.0);
+  volts = float(counts) * (3.0 / 1023.0);
   // Serial.print(volts,3); Serial.print("\t");
   volts *= 2;
   // Serial.println(volts,3);

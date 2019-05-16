@@ -3,6 +3,9 @@
   control bytes and register definitions for controling MAX30102
 */
 
+// USE FOR DEBUGGING
+#define DEBUG 1// set to 0 to disable
+
 //  SIMBLEE PINS
 #define RED 24        // red part of LED
 #define GRN 23        // green part of LED
@@ -10,12 +13,12 @@
 #define MAX_INT 30    // MAX30102 interrupts on this Simblee pin
 #define SCL_PIN 13    // I2C clock pin
 #define SDA_PIN 10    // I2C data pin
-#define BMI_INT1 29
+#define BMI_INT1 29   
 #define BMI_INT2 28
 #define PIN_25 25     // GPIO
 #define PIN_3 3       // GPIO and Analog pin
 #define PIN_2 2       // GPIO and Analog pin
-#define V_SENSE 5     // Digital 5, AnalogIn 6 measure Battery Level with this pin
+#define V_SENSE 5     // Measure Battery Level with this pin
 
 // BMI160 Stuph
 #define BMI_ADD 0x68
@@ -38,13 +41,12 @@
 #define RED_PA 0x0C
 #define IR_PA 0x0D
 #define GRN_PA 0x0E
-#define PILOT_PA  0x10
+#define LED4_PA  0x0F
 #define MODE_CNTRL_1  0x11
 #define MODE_CNTRL_2  0x12
 #define TEMP_INT  0x1F
 #define TEMP_FRAC 0x20
 #define TEMP_CONFIG 0x21
-#define PROX_INT_THRESH 0x30
 #define REV_ID  0xFE
 #define PART_ID 0xFF
 
@@ -52,7 +54,6 @@
 #define A_FULL  0x80
 #define PPG_RDY 0x40
 #define ALC_OVF 0x20
-#define PROX_INT 0x10
 #define PWR_RDY 0x01
 #define TEMP_RDY  0x02
 #define SMP_AVE_1 0x00
@@ -86,8 +87,8 @@
 #define TEMP_EN 0x01
 
 // filter stuff
-#define CUTTOFF_LOW 0.5
-#define CUTTOFF_HIGH 10.0
+#define CUTTOFF_LOW 10.0 // 0.5
+#define CUTTOFF_HIGH 0.5 // 10.0
 #define NUM_SAMPLES 10
 
 // other stuff
@@ -95,4 +96,5 @@
 #define GREEN_ON 2
 #define BLUE_ON 3
 #define ALL_ON 4
-#define BATT_VOLT_CONST 0.0165
+#define DOWN 0
+#define UP 1

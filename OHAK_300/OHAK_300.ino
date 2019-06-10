@@ -1,7 +1,7 @@
 /*
-  Pulse Patch
-  This code targets a Simblee
-  I2C Interface with MAX30102 Sp02 Sensor Module
+  OpenHAK 3.0.0 Test Code
+  This code targets a Simblee as OpenHAK hardware profile
+  I2C Interface with MAX30101 Sp02 Sensor Module
   Also got a BOSH MEMS thing
   And it might actually be a MAX30101...?
 */
@@ -42,10 +42,11 @@ float sampleRate = 100.0; //
 char readPointer;
 char writePointer;
 char ovfCounter;
-int redAmp = 10;
-int irAmp = 10;
-int grnAmp = 10;
+int redAmp = 50;
+int irAmp = 50;
+int grnAmp = 50;
 
+float volts;
 
 //  TESTING
 unsigned int thisTestTime;
@@ -64,6 +65,7 @@ float LPfilterInputIR[NUM_SAMPLES];
 float LPfilterOutputIR[NUM_SAMPLES];
 
 
+#define DEBUG 1// set to 0 to disable
 void setup(){
 
   Wire.beginOnPins(SCL_PIN,SDA_PIN);
@@ -74,9 +76,9 @@ void setup(){
   
   LED_blinkTimer = LED_fadeTimer = millis();
   
-//  pinMode(MAX_INT,INPUT);
-//  attachPinInterrupt(MAX_INT,MAX_ISR,LOW);
-//  serviceInterrupts();
+  pinMode(MAX_INT,INPUT);
+  attachPinInterrupt(MAX_INT,MAX_ISR,LOW);
+  serviceInterrupts();
 
   MAX_init(SR_100); // initialize MAX30102, specify sampleRate
   if (useFilter){ initFilter(); }
@@ -95,25 +97,28 @@ void setup(){
   }
   initFilter();
   useFilter = true;
-  pulse(BLU);
   
 }
 
 
 void loop(){
 
-  interruptFlags = MAX_readInterrupts();
-  if(interruptFlags > 0){
-    serveInterrupts(interruptFlags); // go see what woke us up, and do the work
-    if(DEBUG){
-      thisTestTime = micros();
-      printTab(); printTab(); Serial.println(thisTestTime - thatTestTime);
-      thatTestTime = thisTestTime;
-    }
+//  interruptFlags = MAX_readInterrupts();
+//  if(interruptFlags > 0){
+if(MAX_interrupt){
+  serviceInterrupts();
+  MAX_interrupt = false;
+}
+//    serveInterrupts(interruptFlags); // go see what woke us up, and do the work
+//    if(DEBUG){
+//      thisTestTime = micros();
+//      printTab(); printTab(); Serial.println(thisTestTime - thatTestTime);
+//      thatTestTime = thisTestTime;
+//    }
 //    if(sampleCounter == 0x00){  // rolls over to 0 at 200
 //      MAX30102_writeRegister(TEMP_CONFIG,0x01); // take temperature
 //    }
-  }
+//  }
 
 
   if(rainbow){
@@ -267,15 +272,15 @@ void pulse(int led){  // needs help
   if(millis() - LED_fadeTimer > LED_fadeTime){
     if(falling){
       fadeValue-=10;
-      if(fadeValue <= 0){
+      if(fadeValue <= 100){
         falling = false;
-        fadeValue = 2;
+        fadeValue = 100;
       }
     }else{
       fadeValue+=10;
-      if(fadeValue >= 200){
+      if(fadeValue >= 254){
         falling = true;
-        fadeValue = 200;
+        fadeValue = 254;
       }
     }
     analogWrite(led,fadeValue);
@@ -328,33 +333,33 @@ void serialAmps(){
   }
 }
 
-//float getBatteryVoltage(){
-//    int thisCount, lastCount;
-//    for(int i=0; i<100; i++){
-//      lastCount = analogRead(V_SENSE);
-//      delay(10);
-//      thisCount = analogRead(V_SENSE);
-//      if(DEBUG){
-//        Serial.print(i); Serial.print("\t"); Serial.print(lastCount); Serial.print("\t"); Serial.println(thisCount);
-//      }
-//      if(thisCount >= lastCount){ break; }
-//      delay(10);
-//    }
-//    volts = float(thisCount) * (3.0 / 1023.0);
-//    volts *= 2.0;
-//    if(DEBUG){
-//      Serial.print(thisCount); Serial.print("\t"); Serial.println(volts,3);
-//    }
-//    return volts / BATT_VOLT_CONST; // why do this??
-//}
-
 float getBatteryVoltage(){
-  int counts = analogRead(V_SENSE);
-  if(DEBUG){ Serial.print(counts); Serial.print("\t"); }
-  float volts = float(counts) * (3.0/1023.0);
-  if(DEBUG) { Serial.print(volts,3); Serial.print("\t"); }
-  volts *=2;
-  if(DEBUG){ Serial.println(volts,3); }
-
-  return volts;
+    int thisCount, lastCount;
+    for(int i=0; i<100; i++){
+      lastCount = analogRead(V_SENSE);
+      delay(10);
+      thisCount = analogRead(V_SENSE);
+      if(DEBUG){
+        Serial.print(i); Serial.print("\t"); Serial.print(lastCount); Serial.print("\t"); Serial.println(thisCount);
+      }
+      if(thisCount >= lastCount){ break; }
+      delay(10);
+    }
+    volts = float(thisCount) * (3.0 / 1023.0);
+    volts *= 2.0;
+    if(DEBUG){
+      Serial.print(thisCount); Serial.print("\t"); Serial.println(volts,3);
+    }
+    return volts / BATT_VOLT_CONST; // compress value for OTA
 }
+
+//float getBatteryVoltage(){
+//  int counts = analogRead(V_SENSE);
+//  if(DEBUG){ Serial.print(counts); Serial.print("\t"); }
+//  float volts = float(counts) * (3.0/1023.0);
+//  if(DEBUG) { Serial.print(volts,3); Serial.print("\t"); }
+//  volts *=2;
+//  if(DEBUG){ Serial.println(volts,3); }
+//
+//  return volts;
+//}

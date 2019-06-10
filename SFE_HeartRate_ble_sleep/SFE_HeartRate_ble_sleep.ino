@@ -193,7 +193,7 @@ setTime(DEFAULT_TIME);
   // Initialize sensor
   if (!particleSensor.begin(Wire, 400, MAX_ADD)) //Use default I2C port, 400kHz speed
   {
-    //Serial.println("MAX30105 was not found. Please check wiring/power. ");
+    Serial.println("MAX30105 was not found");
     while (1);
   }
 
@@ -419,7 +419,7 @@ String digitalClockDisplay() {
 }
 uint8_t getBatteryVoltage() {
     int thisCount, lastCount;
-
+    byte returnVal;
     for(int i=0; i<100; i++){
       lastCount = analogRead(V_SENSE);
       delay(10);
@@ -435,5 +435,6 @@ uint8_t getBatteryVoltage() {
     if(DEBUG){
       Serial.print(thisCount); Serial.print("\t"); Serial.println(volts,3);
     }
-    return volts / BATT_VOLT_CONST; // why do this??
+    returnVal = byte(volts/BATT_VOLT_CONST); // convert to byte for OTA data transfer
+    return returnVal;
 }

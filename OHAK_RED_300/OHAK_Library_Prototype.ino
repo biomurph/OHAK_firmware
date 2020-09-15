@@ -217,6 +217,7 @@ void readPPG(){
 
 // send PPG value(s) via Serial port
 void serialPPG(){
+  int Red_IR = REDvalue + IRvalue;
   if (DEBUG) {
 //    Serial.println();  // formatting...
     Serial.print(sampleCounter,DEC); printTab();
@@ -224,13 +225,18 @@ void serialPPG(){
     Serial.print(IRvalue);
   } else {
     if(useFilter){
-
+//      thatTestTime = micros();  // USE TO TIME FILTER MATH
+      HPfilterOutput = highPass.filterIn(Red_IR); // HighPass takes about 110uS
+      LPfilterOutput = lowPass.filterIn(HPfilterOutput);  // BandPass takes about 140uS
+//      thisTestTime = micros(); Serial.print(thisTestTime - thatTestTime);
+//      Serial.println(LPfilterOutput,1); // try to reduce noise in low bits
+//      Serial.println(HPfilterOutput,1); // try to reduce noise in low bits
+//      Serial.println(Red_IR);
     } else {
-      Serial.print(REDvalue + IRvalue);
+      Serial.println(Red_IR);
 //      printSpace();
 //      Serial.print(IRvalue);
     }
-    Serial.println();
   }
 }
 

@@ -55,12 +55,6 @@
 #define ALC_OVF 0x20
 #define PWR_RDY 0x01
 #define TEMP_RDY  0x02
-#define SMP_AVE_1 0x00
-#define SMP_AVE_2 0x20
-#define SMP_AVE_4 0x40
-#define SMP_AVE_8 0x60
-#define SMP_AVE_16 0x80
-#define SMP_AVE_32 0xA0
 #define ROLLOVER_EN 0x10
 #define SHUTDOWN  0x80
 #define RESET   0x40
@@ -79,6 +73,12 @@
 #define SR_1000 0x14
 #define SR_1600 0x18
 #define SR_3200 0x1C
+#define SMP_AVE_1 0x00
+#define SMP_AVE_2 0x20
+#define SMP_AVE_4 0x40
+#define SMP_AVE_8 0x60
+#define SMP_AVE_16 0x80
+#define SMP_AVE_32 0xA0
 #define PW_69 0x00
 #define PW_118  0x01
 #define PW_215  0x02
